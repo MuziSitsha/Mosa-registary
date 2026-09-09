@@ -1,0 +1,7 @@
+# local backups / superseded files — kept on disk, not published
+index.original-claude-design.html
+README.original.md
+support.js
+
+.DS_Store
+Thumbs.db
