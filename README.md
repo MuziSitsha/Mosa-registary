@@ -78,6 +78,7 @@ Everything is in the `CFG` block at the top of the `<script>` in `index.html`:
 | `babyName` | Name in the title and footer |
 | `tagline` | The line under the title |
 | `contactName`, `contactPhone` | The "Ask the family" card |
+| `whatsappCountryCode` | Tapping the phone number opens a WhatsApp chat (free — just the public `wa.me` link format, no WhatsApp Business account needed). Set to `""` to make the number plain text instead. Default `"27"` (South Africa). |
 | `dropOff` | The paragraph in the "Ask the family" card |
 | `passcode` | Family-view gate. **It is visible in the page source** — it just keeps casual guests out of the names list, it is not real security. Currently `mosa2026`. |
 
@@ -103,18 +104,24 @@ server is needed.)
 
 ---
 
-## 4. Publish it (GitHub Pages — free)
+## 4. Publish it
 
-The files are already in this repo. To go live:
+**Live link to send out: https://mosasregistrylink.netlify.app/**
 
-1. Push any edits to the `main` branch.
-2. Repo **Settings → Pages**: *Source* = **Deploy from a branch**,
-   *Branch* = `main`, folder = `/ (root)`. **Save**.
-3. Wait ~1 minute. The registry is live at
-   **`https://muzisitsha.github.io/Mosa-registary/`** — that's the link to
-   send out. The "Copy the registry link" button on the page copies it too.
+The site is hosted on **Netlify**, connected to this repo — every push to
+`main` auto-deploys within about a minute, no manual step needed. To rename
+the subdomain: Netlify dashboard → **Site configuration → Site details →
+Change site name**.
 
-Any later edit: commit, push, wait a minute, done.
+It's also still reachable at `https://muzisitsha.github.io/Mosa-registary/`
+(GitHub Pages, kept on as a backup) — don't send that one out, it has the
+GitHub username in it.
+
+Any edit: commit, push, wait ~1 minute, both links update. GitHub Pages can
+lag Netlify by a few minutes and caches pages for up to 10 minutes
+(`Cache-Control: max-age=600`), so if a phone shows stale content, a hard
+refresh (or wait a bit) fixes it — the Netlify link revalidates every load
+and won't have this problem.
 
 ---
 

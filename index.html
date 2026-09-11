@@ -146,6 +146,12 @@
     main#list{columns:1}
     .progress{padding:20px}
   }
+  @media (max-width:520px){
+    /* On a phone the giraffe crammed beside the title left almost no room
+       for the two buttons, forcing them into a narrow stacked column. */
+    header.hero{flex-direction:column;gap:6px}
+    header.hero > img{align-self:center;width:120px}
+  }
 </style>
 </head>
 <body>
@@ -203,7 +209,7 @@
       <h3>Ask the family</h3>
       <p id="c-drop">Not sure about a gift, or want to send it ahead? Message us and we'll sort out delivery or drop-off.</p>
       <div style="font-size:15px;font-weight:700;color:var(--ink)" id="c-name">Nonkazimulo Sitsha</div>
-      <div style="font-size:15px;color:var(--green);font-weight:700" id="c-phone">079 744 8679</div>
+      <a href="#" id="c-phone" style="font-size:15px;color:var(--green);font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px">079 744 8679</a>
     </div>
   </section>
 
@@ -236,6 +242,10 @@ var CFG = {
   tagline:     "Little girl  ·  Big dreams  ·  Lots of love",
   contactName: "Nonkazimulo Sitsha",
   contactPhone:"079 744 8679",
+  // Tapping the number opens a WhatsApp chat (free — no WhatsApp Business
+  // account or API needed, it's just the public wa.me link format).
+  // Set to "" to make the number plain, non-clickable text instead.
+  whatsappCountryCode: "27",   // South Africa. Change if the contact's number is in another country.
   dropOff:     "Not sure about a gift, or want to send it ahead? Message us and we'll sort out delivery or drop-off.",
   passcode:    "mosa2026",  // gate for the Family view. Not real security — it is visible in the page source.
 
@@ -583,7 +593,20 @@ $("h-title").textContent = CFG.babyName + "'s Baby Gift List";
 $("h-tagline").textContent = CFG.tagline;
 $("c-drop").textContent = CFG.dropOff;
 $("c-name").textContent = CFG.contactName;
-$("c-phone").textContent = CFG.contactPhone;
+(function(){
+  var el = $("c-phone");
+  el.textContent = CFG.contactPhone;
+  var digits = String(CFG.contactPhone).replace(/\D/g, "").replace(/^0/, "");
+  if (CFG.whatsappCountryCode && digits){
+    el.href = "https://wa.me/" + CFG.whatsappCountryCode + digits;
+    el.target = "_blank";
+    el.rel = "noopener";
+    el.textContent = CFG.contactPhone + " · WhatsApp";
+  } else {
+    el.removeAttribute("href");
+    el.style.cursor = "default";
+  }
+})();
 $("f-name").textContent = CFG.babyName;
 document.title = CFG.babyName + "'s Baby Gift List — Gift Registry";
 
