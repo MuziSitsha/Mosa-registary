@@ -83,9 +83,13 @@ Everything is in the `CFG` block at the top of the `<script>` in `index.html`:
 | `passcode` | Family-view gate. **It is visible in the page source** — it just keeps casual guests out of the names list, it is not real security. Currently `mosa2026`. |
 
 **The gift list** is the `CATS` array just below `CFG`. Each category is
-`{ name, band, ink, img, items }`. Each item is `["Item name"]`, or
-`["Item name", 1]` to let several people bring it (nappies, clothing,
-vouchers…).
+`{ name, band, ink, img, items }`. Each item is:
+- `["Item name"]` — exactly **one** claimer, then it locks (most big single items)
+- `["Item name", 3]` — a numeric cap, e.g. up to **3** people can each bring one (Play gym)
+- `["Item name", Infinity]` — **unlimited** claimers, never locks (nappies, wipes, clothing, vouchers…)
+
+A cap only limits how many different guests can claim *that one item* — it
+never limits how many different gifts one guest can claim overall.
 
 **Date & venue** is the "Coming soon" card in the markup — replace it with the
 real date, venue and an RSVP when they're confirmed.

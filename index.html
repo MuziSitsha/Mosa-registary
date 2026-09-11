@@ -252,32 +252,37 @@ var CFG = {
   POLL_MS: 6000            // how often the page checks for other people's claims
 };
 
-/* ---- the gift list ------------------------------------------------------- */
+/* ---- the gift list -------------------------------------------------------
+   Each item is [label] or [label, cap]:
+     no cap        -> exactly 1 claimer allowed (default — most single big items)
+     cap: Infinity -> unlimited claimers ("more than one welcome")
+     cap: a number -> that many claimers allowed, then it locks (e.g. Play gym: 3)
+   ------------------------------------------------------------------------- */
 var CATS = [
   { name: "Sleep & Soothing", band: "#eef1e2", ink: "#7a8c56", img: "sleep", items: [
-    ["Sleep sack / wearable blanket (arms & legs in, zipped)"], ["Nightlight"], ["Baby monitor"],
-    ["Baby monitor with camera or breathing monitor"], ["White noise machine"],
-    ["Storage baskets", 1], ["Swaddle / muslin cloths", 1] ] },
+    ["Sleep sack / wearable blanket (arms & legs in, zipped)", Infinity], ["Nightlight"], ["Baby monitor", Infinity],
+    ["Baby monitor with camera or breathing monitor", Infinity], ["White noise machine"],
+    ["Storage baskets", Infinity], ["Swaddle / muslin cloths", Infinity] ] },
   { name: "Bath & Skincare", band: "#fdf3d1", ink: "#c99a3f", img: "bath", items: [
-    ["Hooded towels", 1], ["Shampoo (scent-free)", 1], ["Baby wash (scent-free)", 1], ["Baby oil", 1],
-    ["Baby bum cream", 1], ["Baby Vaseline (or similar)", 1], ["Nappies — all sizes", 1], ["Wipes", 1],
-    ["Baby bath toys"], ["Baby hamper"] ] },
+    ["Hooded towels", Infinity], ["Shampoo (scent-free)", Infinity], ["Baby wash (scent-free)", Infinity], ["Baby oil", Infinity],
+    ["Baby bum cream", Infinity], ["Baby Vaseline (or similar)", Infinity], ["Nappies — all sizes", Infinity], ["Wipes", Infinity],
+    ["Baby bath toys", Infinity], ["Baby hamper", Infinity] ] },
   { name: "Feeding", band: "#fdf3d1", ink: "#c99a3f", img: "feeding", items: [
-    ["Bottles (NUK)", 1], ["Bottle cleaning mat"], ["Bottle drying rack"], ["Bottle cleaning brushes", 1],
-    ["Breast milk storage bags", 1], ["Feeding chair"] ] },
+    ["Bottles (NUK)", Infinity], ["Bottle cleaning mat", Infinity], ["Bottle drying rack"], ["Bottle cleaning brushes", Infinity],
+    ["Breast milk storage bags", Infinity], ["Feeding chair"] ] },
   { name: "Clothing", band: "#eef1e2", ink: "#7a8c56", img: "clothing", items: [
-    ["Any clothing for the baby", 1], ["Bibs", 1], ["Socks & booties", 1] ] },
+    ["Any clothing for the baby", Infinity], ["Bibs", Infinity], ["Socks & booties", Infinity] ] },
   { name: "Playtime", band: "#eef1e2", ink: "#7a8c56", img: "playtime", items: [
-    ["Play gym"], ["Tummy time mat & toys"], ["High contrast cards"], ["Soft books & baby books", 1],
-    ["Rattles", 1], ["Sensory toys", 1], ["Teething toys", 1], ["Soft toys", 1] ] },
+    ["Play gym", 3], ["Tummy time mat & toys", Infinity], ["High contrast cards", Infinity], ["Soft books & baby books", Infinity],
+    ["Rattles", Infinity], ["Sensory toys", Infinity], ["Teething toys", Infinity], ["Soft toys", Infinity] ] },
   { name: "Travel & Outings", band: "#fdf3d1", ink: "#c99a3f", img: "travel", items: [
     ["Baby carrier"], ["Car seat monitor"], ["Car seat mirror"], ["Baby sunshade"] ] },
   { name: "Health & First Aid", band: "#eef1e2", ink: "#7a8c56", img: "health", items: [
     ["Digital thermometer"], ["First aid kit"], ["Nasal aspirator"] ] },
   { name: "Books & Keepsakes", band: "#fdf3d1", ink: "#c99a3f", img: "books", items: [
-    ["Baby memory book"], ["Personalised baby blanket"], ["Keepsake box"], ["Hand and footprint kit"] ] },
+    ["Baby memory book"], ["Personalised baby blanket", Infinity], ["Keepsake box"], ["Hand and footprint kit"] ] },
   { name: "Vouchers & Gifts for the Parents", band: "#fdf3d1", ink: "#c99a3f", img: "vouchers", items: [
-    ["Spa voucher", 1], ["Restaurant voucher", 1], ["Couple's gift"], ["Family photo session"], ["Gift card", 1] ] }
+    ["Spa voucher", Infinity], ["Restaurant voucher", Infinity], ["Couple's gift", Infinity], ["Family photo session"], ["Gift card", Infinity] ] }
 ];
 var RATIOS = {"sleep":"268/212","bath":"258/180","feeding":"268/104","clothing":"270/140","playtime":"292/128","travel":"254/180","health":"296/118","books":"328/162","vouchers":"372/126"};
 
@@ -367,7 +372,7 @@ function allItems(){
   var out = [];
   CATS.forEach(function(c){
     c.items.forEach(function(pair){
-      out.push({ id: slug(c.name) + "--" + slug(pair[0]), label: pair[0], multi: !!pair[1], cat: c.name });
+      out.push({ id: slug(c.name) + "--" + slug(pair[0]), label: pair[0], cap: pair[1] || 1, cat: c.name });
     });
   });
   return out;
@@ -399,7 +404,7 @@ function paint(){
   function visible(i){
     if (q && i.label.toLowerCase().indexOf(q) === -1 && i.cat.toLowerCase().indexOf(q) === -1) return false;
     var n = claimsFor(i.id).length;
-    if (state.filter === "open") return n === 0 || i.multi;
+    if (state.filter === "open") return n < i.cap;
     if (state.filter === "done") return n > 0;
     if (state.filter === "mine") return isMine(i.id);
     return true;
@@ -421,14 +426,25 @@ function paint(){
       + '</div><ul class="items">';
 
     shown.forEach(function(i){
-      var claims = claimsFor(i.id), n = claims.length, mine = isMine(i.id), taken = n > 0 && !i.multi;
+      var claims = claimsFor(i.id), n = claims.length, mine = isMine(i.id);
+      var full = n >= i.cap, taken = full && !mine;
       var cls = mine ? "row mine" : taken ? "row taken" : "row";
       var meta, btn;
-      if (mine){ meta = "You're bringing this"; btn = "Undo"; }
-      else if (taken){ meta = "Already taken care of"; btn = "Taken"; }
-      else if (i.multi && n){ meta = n + (n === 1 ? " person is" : " people are") + " bringing this — more welcome"; btn = "I'll bring it"; }
-      else if (i.multi){ meta = "More than one welcome"; btn = "I'll bring it"; }
-      else { meta = "Still needed"; btn = "I'll bring it"; }
+      if (mine){
+        meta = i.cap === 1 ? "You're bringing this" : "You're bringing this (" + n + " of " + i.cap + ")";
+        btn = "Undo";
+      } else if (taken){
+        meta = i.cap === 1 ? "Already taken care of" : "All " + i.cap + " spots are taken";
+        btn = "Taken";
+      } else if (i.cap === Infinity){
+        meta = n ? (n + (n === 1 ? " person is" : " people are") + " bringing this — more welcome") : "More than one welcome";
+        btn = "I'll bring it";
+      } else if (i.cap > 1){
+        meta = n ? (n + " of " + i.cap + " spots taken — join in") : ("Up to " + i.cap + " people can bring this");
+        btn = "I'll bring it";
+      } else {
+        meta = "Still needed"; btn = "I'll bring it";
+      }
 
       html += '<li class="' + cls + '" data-id="' + esc(i.id) + '">'
         + '<div class="m"><div class="label">' + esc(i.label) + '</div>'
@@ -461,9 +477,11 @@ function renderModal(){
   root.innerHTML = ''
     + '<div class="scrim"><div class="modal" role="dialog" aria-modal="true">'
     + '<h3>' + esc(item.label) + '</h3>'
-    + '<p class="blurb">' + (item.multi
-        ? "Lovely — several people can bring this one. Your name is only visible to the family."
-        : "We'll mark this as taken so nobody doubles up. Your name is only visible to the family.") + '</p>'
+    + '<p class="blurb">' + (
+        item.cap === Infinity ? "Lovely — several people can bring this one. Your name is only visible to the family."
+        : item.cap > 1 ? "Up to " + item.cap + " people can bring this one (" + claimsFor(item.id).length + " so far). Your name is only visible to the family."
+        : "We'll mark this as taken so nobody doubles up. Your name is only visible to the family."
+      ) + '</p>'
     + '<label>Your name</label>'
     + '<input id="m-name" placeholder="e.g. Aunt Thandi" value="' + esc(state.myName) + '">'
     + '<label>Note for the family <span style="text-transform:none;letter-spacing:0;font-weight:600">(optional)</span></label>'
